@@ -14,17 +14,18 @@ A second pass over the data to compute scores/weights for each data point:
 3. For a given data point, hash it using the same `R` hash functions.
 4. For each hash function, look up the count of the hash value index in the `sketch`. 
 5. Add the count (score) of each hash function to `score` to compute a sum of scores for the data point.
-6. Average `score` over the `R` hash functions to get the final score for the data point (`score/R`).
+6. Instead of averaging `score` over the `R` hash functions to get the final score for the data point, we normalize the score over the total count of the sketch matrix (`score/(R * N)`). The sum `np.sum(sketch)` is `N * R`.
 7. Append the data point's score to the list of scores.
 
-Finally, calculate the sampling probabilities (inverse propensity): `weights = np.Array(scores) / sum(scores)`
+Finally, calculate the sampling probabilities (inverse propensity means taking the reciprocal): 
 
-### Implementation uncertainties
-
-* The reference L2-norm LSH implementation for P-stable distributions by Coleman uses a normal distribution with default parameters (mean=0, std=1) to construct the random projection matrix. This leads to hash values that are both negative and postitive. While negative indexing is possible, it might cause issues whenever the ranges of positive and negative indices are large enough to collide (i.e. larger than half the hash range: `abs(hash_value) >= B/2`). One can however tune the value of `r` to make it unlikely fort this to happen.
+```python
+weights = 1 / np.array(scores)
+```
 
 ### References
 
 ["How to Train Data-Efficient LLMs" (Sachdeva et al., 2024)](https://arxiv.org/abs/2402.01613)  
 ["Locality-Sensitive Hashing Scheme Based on p-Stable Distributions" (Datar et al., 2004)](https://www.cs.princeton.edu/courses/archive/spring05/cos598E/bib/p253-datar.pdf)  
-["Implementing LSH Functions in Tensorflow" (Benjamin Coleman)](https://randorithms.com/2022/02/11/tensorflow-lsh-functions.html)
+["Implementing LSH Functions in Tensorflow" (Benjamin Coleman)](https://randorithms.com/2022/02/11/tensorflow-lsh-functions.html)  
+Coleman, Benjamin, et al. ["One-pass diversified sampling with application to terabyte-scale genomic sequence streams." International Conference on Machine Learning. PMLR, 2022.](https://proceedings.mlr.press/v162/coleman22a.html)
